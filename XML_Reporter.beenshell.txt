@@ -1,0 +1,50 @@
+This script is used as beenshell sampler in JMeter for creating XML file for Bamboo JUnit report.
+
+import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.samplers.Sampler;
+import org.apache.jmeter.assertions.AssertionResult;
+import org.apache.jmeter.services.FileServer;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+Sampler cur_sampler=ctx.getCurrentSampler();
+Sampler prev_sampler=ctx.getPreviousSampler();
+SampleResult prev_result=ctx.getPreviousResult();
+
+f = new FileOutputStream(FileServer.getFileServer().getBaseDir()+"\\customReport\\_JmeterCustomReport.xml", true); 
+p = new PrintStream(f); 
+double time_sec = (double)prev_result.getTime()/1000;
+
+p.println("    <testcase classname=\""+vars.get("TC_name")+"\" name=\""+prev_result.getSampleLabel()+"\" time=\""+time_sec+"\" assertions=\""+size+"\">");
+if (prev_result !=  null) {
+ 			AssertionResult [] results=prev_result.getAssertionResults();
+    	size = results.length;
+			log.info("---------------Assertions: ------------------------->"+size);
+     
+      for (int i=0; i<=size-1; i++) {
+     	AssertionResult result_item = results[i];
+      if (result_item == null) {print ("result item is null");}
+			log.info("---------------result_item.getName()------------------------->"+result_item.getName());
+			log.info("---------------result_item.getFailureMessage()------------------------->"+result_item.getFailureMessage());
+
+			if (result_item.isFailure())
+			{
+			p.println("        <failure message=\""+result_item.getName()+"\">");
+			p.println("        </failure>");
+			}
+
+			if (result_item.isError())
+			{
+			p.println("        <error message=\""+result_item.getFailureMessage()+"\">"+result_item.getName());
+			p.println("        </error>");
+			}
+}
+    		
+p.println("    </testcase>");
+
+p.close();
+f.close();
+
+
+log.info("----------------------------------------------------------------------------------------------");
+
